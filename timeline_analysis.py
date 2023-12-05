@@ -26,14 +26,26 @@ def get_place_id_info(place_visit):
     full_address = f"{name}, {address}" if name else address
     return place_id, full_address
 
+def get_year_from_data(data):
+    for obj in data.get('timelineObjects', []):
+        if 'placeVisit' in obj:
+            duration = obj['placeVisit'].get('duration', {})
+            start_timestamp = duration.get('startTimestamp')
+            if start_timestamp:
+                return parse_timestamp(start_timestamp).year
+    return "Unknown Year"
+
 # Main Script
 visit_details = defaultdict(lambda: {'count': 0, 'duration': 0, 'address': ''})
+year = None
 
 # Read and combine all JSON files
 for filename in os.listdir(DIRECTORY):
     if filename.endswith('.json'):
         with open(os.path.join(DIRECTORY, filename), 'r') as file:
             data = json.load(file)
+            if not year:
+                year = get_year_from_data(data)
             timeline_objects = data.get('timelineObjects', [])
             for obj in timeline_objects:
                 if 'placeVisit' in obj:
@@ -47,10 +59,12 @@ for filename in os.listdir(DIRECTORY):
 # Sort the list of places
 if SORT_BY == 'time':
     sorted_visits = sorted(visit_details.items(), key=lambda x: x[1]['duration'], reverse=True)[:TOP_PLACES_LIMIT]
+    sort_message = "ordered by time spent"
 else:  # Default to sorting by frequency
     sorted_visits = sorted(visit_details.items(), key=lambda x: x[1]['count'], reverse=True)[:TOP_PLACES_LIMIT]
+    sort_message = "ordered by number of visits"
 
-print("Top 20 places visited, ordered by number of visits:")
+print(f"Top 20 places visited in {year}, {sort_message}:")
 for index, (place_id, details) in enumerate(sorted_visits):
     total_hours = round(details['duration'] / 3600, 2)
     total_days = round(details['duration'] / SECONDS_IN_DAY, 2)
@@ -63,3 +77,4 @@ for index, (place_id, details) in enumerate(sorted_visits):
     print(f'{details["address"]} ({details["count"]} visits)'.center(80))
     print(f'Time spent: {total_hours} hours ({total_days} days, {percentage_of_year:.2f}% of the year, {average_percentage_per_month:.2f}% per month)'.center(80))
     print('┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━•❃°•°❀°•°❃•━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛')
+    print('\n')
