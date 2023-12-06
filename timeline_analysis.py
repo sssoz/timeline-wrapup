@@ -8,7 +8,7 @@ DIRECTORY = './'  # Update this path
 SECONDS_IN_DAY = 86400
 SECONDS_IN_YEAR = 31536000  # Assuming a non-leap year
 MONTHS_IN_YEAR = 12
-TOP_PLACES_LIMIT = 20  # Limit to top 20 places
+TOP_PLACES_LIMIT = 40  # Limit to top 20 places
 SORT_BY = 'frequency'  # Options: 'time' or 'frequency'
 CIRCLED_NUMBERS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳']
 
@@ -56,12 +56,12 @@ for filename in os.listdir(DIRECTORY):
                         visit_details[place_id]['duration'] += duration
                         visit_details[place_id]['address'] = full_address
 
-# Sort the list of places
+# Sort the list of places with secondary sorting
 if SORT_BY == 'time':
     sorted_visits = sorted(visit_details.items(), key=lambda x: x[1]['duration'], reverse=True)[:TOP_PLACES_LIMIT]
     sort_message = "ordered by time spent"
-else:  # Default to sorting by frequency
-    sorted_visits = sorted(visit_details.items(), key=lambda x: x[1]['count'], reverse=True)[:TOP_PLACES_LIMIT]
+else:  # Primary sort by frequency, secondary sort by duration
+    sorted_visits = sorted(visit_details.items(), key=lambda x: (x[1]['count'], x[1]['duration']), reverse=True)[:TOP_PLACES_LIMIT]
     sort_message = "ordered by number of visits"
 
 print(f"Top 20 places visited in {year}, {sort_message}:")
